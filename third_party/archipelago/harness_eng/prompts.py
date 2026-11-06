@@ -25,6 +25,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# 模块说明:可进化脚手架的提示词。v0 刻意裸配:系统提示就是官方 react_toolbelt
+# 版本,仅删去 web_search 提法(封闭工作区:任务给的都在盘上,没有网络);任务
+# 包装只陈述交付契约,别无其他。刻意不放在这里的内容及其原因:
+# 不写任何工程方法论("核对数字""量纲 sanity check""换一种方法重推结果"、设计
+# 工作流示例等)——每一条都是合理的机制,正因为如此提议者必须自己发现它、并对照
+# 接受规则为之付费,而不是从基础 harness 继承;v0 就自带方法论会让整轮运行失去
+# 归因:曲线平坦将意味着"方法论本来就有",而非"脚手架在此无用"。
+# 也不提验证器、分数、valid、passed 或部分得分——只告诉代理要产出什么,不告诉它
+# 会被怎么评;否则就是邀请代理优化评分器而不是优化设计。
 """Prompts for the evolvable scaffold.
 
 Deliberately bare at v0. The system prompt is the official react_toolbelt one,
@@ -50,6 +59,8 @@ optimising the grader instead of the design.
 # Official react_toolbelt system prompt. The `web_search` mention is removed
 # because this benchmark ships every input it needs inside the workspace; naming
 # a tool the environment does not expose only teaches the policy to look for it.
+# 官方 react_toolbelt 系统提示;删去 web_search 提法:基准把全部输入都放进工作区,
+# 提一个环境里不存在的工具只会教会策略去寻找它。
 SYSTEM_PROMPT = """You are an AI assistant that completes tasks by reasoning and using tools.
 
 ## Think Before Acting
@@ -84,6 +95,11 @@ Don't over-explain. Be concise but show your thinking.
 - `final_answer` is rejected if todos are incomplete"""
 
 
+# 任务包装模板:先读题面文件;工作区封闭(无网络);响应 schema 是 pydantic 模型
+# Response_structure,答案必须同字段名/同嵌套/同类型;交付物是唯一计分文件——
+# 模块级 dict PAYLOAD(键即 Response_structure 字段),必须是纯字面量(经
+# ast.literal_eval 解析,禁止 import/函数调用/推导式/变量/文件 IO),一切计算
+# 结果都要先化为字面量再写入;打印、聊天解释、临时文件一概不计分。
 TASK_TEMPLATE = """=== ENGINEERING DESIGN TASK ===
 The full problem statement is the file below. Read it first.
 

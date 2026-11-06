@@ -25,8 +25,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# 模块说明:Harvey LAB 域中三个搜索角色(分析师/消化器/提议者,另有批评家)的
+# 领域简报段落。简报告诉每个角色基准怎么运作、证据长什么样、以及越界(red line)
+# 在哪里。
 """Domain paragraphs for the three search roles on Harvey LAB."""
 
+# 分析师(analyst)简报:说明基准形态——冻结策略 LLM(Claude Opus 4.8)由 ReAct
+# 工具带脚手架驱动,读取源文档目录并必须按精确文件名写出交付文件;评分是严格的
+# 逐判据量规(每任务 20-100 条独立 pass/fail),分数为通过判据占比。"算了但没写进
+# 交付文件"是独立的失败族;排序模式按判据成本。
 ANALYST = """The agent performs professional LEGAL work (contract review and
 drafting, M&A diligence, IP, governance, funds, litigation support; 25
 practice areas) on the Harvey LAB benchmark: a frozen policy LLM (Claude Opus
@@ -40,6 +47,10 @@ files earns nothing, so "computed but never written into the deliverable" is
 its own failure family. Each rendered trace ends with the per-criterion
 verdicts and the judge's rationale; rank modes by criteria cost."""
 
+# 消化器(digester)简报:说明轨迹文本的结构——系统与任务提示、每一步(工具调用/
+# 结果)、最终输出,以及结尾的 RUBRIC GRADING 块(逐判据 PASS/FAIL 及理由);
+# 指导先读 RUBRIC 块,再用锚点(步号、工具名、文件名、关键值)定位内容在哪里
+# 被计算、丢失或从未写入。
 DIGESTER = """The trajectory comes from a ReAct toolbelt agent doing legal
 document work: it reads source documents through file tools, code_exec and
 read_pdf, and writes deliverable files. Each <task_id>.txt holds the system
@@ -49,6 +60,12 @@ rationale. Read the RUBRIC block first (which criteria failed and why), then
 grep for anchors (step numbers, tool names, file names, key values) to find
 where the content was computed, lost, or never written."""
 
+# 提议者(proposer)简报:基准形态(法律任务、交付文件被评分、无网络)、脚手架
+# 形态(官方 ReAct 工具带代理:todo 列表、网关工具、final_answer 受 todo 门控)、
+# 冻结策略是强模型 Claude Opus 4.8(失败多半是脚手架"饿死/淹没/错路由"而非模型笨);
+# 评分是严格逐判据量规,把算好的结果路由进输出文件是一等公民;越界红线(读/玩弄
+# 量规评审、碰 task.json、任务特定内容)在测量前强制执行;鼓励通用机制而非贴合
+# 本基准偶然怪癖的机制(试金石:是否能在任何合理环境中帮助胜任的律师)。
 PROPOSER = """The benchmark is Harvey LAB: legal tasks that give the agent a
 folder of source documents (.docx/.xlsx/.pdf) and instructions; it must
 produce deliverable files with exact requested filenames (memos, markups, term
@@ -81,6 +98,10 @@ layout, judge phrasing). Litmus test: would this help a competent lawyer
 producing deliverables on MANY unfamiliar legal tasks, in any reasonable
 working environment?"""
 
+# 批评家(critic)简报:本进化线只针对法律域,法律通用的专业方法(先读权威依据、
+# 定稿前交叉核对数字)是合法的、不算泄露;红线在任务特定的事实/名字/答案;
+# 并列出不得在没有可用替代的情况下禁用的既有安全机制(ReSum 上下文压缩
+# resum.py、工具结果截断 tool_result.py、todo 门控的 final_answer)。
 CRITIC = """The harness drives a frozen policy LLM (Claude Opus 4.8) through
 legal document tasks (Harvey LAB): it reads source documents and writes
 deliverable files graded by a per-criterion rubric judge. This evolution line
