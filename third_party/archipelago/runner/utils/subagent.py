@@ -14,8 +14,10 @@
 
 """Utility for spawning blocking subagents from within a parent agent run."""
 
+# 导入 typing.Any：消息列表的通用元素类型。
 from typing import Any
 
+# 导入运行输入/输出与 agent 实现类型。
 from runner.agents.models import AgentImpl, AgentRunInput, AgentTrajectoryOutput
 
 
@@ -50,10 +52,13 @@ async def spawn_subagent(
         AgentTrajectoryOutput from the subagent run. Final answer is in the last
         assistant message; status and usage are populated as normal.
     """
+    # 组装子 agent 的初始消息：目标系统提示置顶，后接调用方挑选的种子消息。
     initial_messages: list[Any] = [
         {"role": "system", "content": system_prompt},
         *messages,
     ]
+    # 构造子 agent 的运行输入：复用父级的轨迹 id 与共享资源（MCP 网关、模型、
+    # 鉴权 token、额外参数），实现上下文隔离但资源共享。
     run_input = AgentRunInput(
         trajectory_id=parent_run_input.trajectory_id,
         initial_messages=initial_messages,
@@ -64,4 +69,5 @@ async def spawn_subagent(
         orchestrator_extra_args=parent_run_input.orchestrator_extra_args,
         agent_config_values={"max_steps": max_steps, **(agent_config_values or {})},
     )
+    # 阻塞式运行子 agent 并返回其轨迹输出（最终答案在最后一条 assistant 消息中）。
     return await agent_impl(run_input)

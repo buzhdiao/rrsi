@@ -25,6 +25,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# 从同包导入 vendored 的 Terminus2 终端 agent 实现（harbor 项目）。
 from .terminus_2 import Terminus2
 
 
@@ -38,7 +39,9 @@ class AgentHarness(Terminus2):
 
     @staticmethod
     def name() -> str:
+        # 返回本 agent 工具链的注册名（供 harness 枚举/日志识别）。
         return "rrsi-terminus2"
 
 
+# 对外导出的符号列表。
 __all__ = ["Terminus2", "AgentHarness"]
