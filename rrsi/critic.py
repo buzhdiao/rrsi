@@ -127,6 +127,8 @@ Return STRICT JSON:
 
 
 def precheck(diff: str, domain_patterns: list) -> list[str]:  # 定义 precheck：第一层确定性黑名单筛查
+    """第一层筛查：对 diff 跑通用黑名单 + domain 专属模式的正则匹配，
+    返回命中的违规理由列表（空列表即通过，不花任何 LLM 调用）。"""
     hits = []  # 命中的理由列表
     for pat, why in GENERIC_PATTERNS + list(domain_patterns or []):  # 通用黑名单在前、domain 专属模式在后
         if re.search(pat, diff):  # 任一正则在 diff 中命中
@@ -137,6 +139,9 @@ def precheck(diff: str, domain_patterns: list) -> list[str]:  # 定义 precheck�
 def review(domain, diff: str, summary: str, targets_mode: str,  # 定义 review：第二层 LLM 审查入口
            edits: list | None = None, state_files: str = "",
            model: str | None = None) -> dict:
+    """第二层审查：预检通过后，把候选摘要、声明的编辑清单、diff 与（若机制
+    持久化状态）状态文件一并交给 LLM 裁决，返回 {verdict, reasons, risk_notes}；
+    连续三轮解析不出合法 JSON 则按拒绝处理（宁错杀不漏放）。"""
     hard = precheck(diff, domain.critic_patterns)  # 先跑确定性预检（domain 模式来自 adapter 的 critic_patterns）
     if hard:  # 预检命中
         return {"verdict": "reject", "reasons": [f"precheck: {h}" for h in hard],  # 直接拒绝，不花 LLM 调用（省时且可复现）

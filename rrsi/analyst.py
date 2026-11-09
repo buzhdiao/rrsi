@@ -126,6 +126,8 @@ Aggregation rules:
 
 
 def prepare_rendered(domain, traces: dict, rendered_dir: Path) -> None:  # 定义 prepare_rendered：把轨迹渲染成文本文件
+    """把本轮选中的轨迹逐条渲染成明文文件，供 digester 子代理只读调查；
+    已渲染过的任务直接跳过（断点续跑不重复劳动）。"""
     rendered_dir.mkdir(parents=True, exist_ok=True)  # 建渲染目录 runs/<domain>/r<t>/analysis/rendered/
     for tid, rec in traces.items():  # 遍历每个选中的轨迹
         out = rendered_dir / f"{tid}.txt"  # 目标文件 <task_id>.txt
@@ -134,6 +136,8 @@ def prepare_rendered(domain, traces: dict, rendered_dir: Path) -> None:  # 定�
 
 
 def task_table(domain, traces: dict, per_task: dict) -> str:  # 定义 task_table：构造任务表（分析师的主上下文）
+    """构造任务表：每任务一行（行文本由 domain 适配器生成），按分数升序
+    拼接成整段文本——最差的任务排在最上面。"""
     rows = []  # (分数, 行文本) 对
     for tid, rec in traces.items():  # 遍历每条轨迹
         tr = per_task.get(tid)  # 该任务的 TaskResult
@@ -145,6 +149,9 @@ def task_table(domain, traces: dict, per_task: dict) -> str:  # 定义 task_tabl
 def analyze(domain, traces: dict, per_task: dict, round_dir: Path,  # 定义 analyze：Analyze(H_t, D) 的主入口
             prior_modes: list | None = None, prior_habits: list | None = None,
             model: str | None = None) -> dict:
+    """Analyze(H_t, D) -> F_t 的主入口：渲染轨迹后进入至多 MAX_TURNS 轮的
+    JSON 动作交互——digest_many 派发摘要子代理、report 交出三透镜报告；
+    prior_modes/prior_habits 只提供历史命名，让跨轮的模式名保持稳定。"""
     rendered_dir = round_dir / "analysis" / "rendered"  # 渲染轨迹目录
     prepare_rendered(domain, traces, rendered_dir)  # 先渲染全部轨迹到磁盘
     digests_dir = round_dir / "analysis" / "digests"  # 摘要落盘目录（供 load_digests 复用）
@@ -222,6 +229,8 @@ def analyze(domain, traces: dict, per_task: dict, round_dir: Path,  # 定义 ana
 
 
 def load_digests(round_dir: Path) -> list:  # 定义 load_digests：从磁盘读回本轮全部摘要
+    """读回本轮落盘的全部摘要 JSON（按文件名排序，保证顺序稳定可复现），
+    供下游把摘要喂给提案者；目录不存在则返回空列表。"""
     dg = round_dir / "analysis" / "digests"  # 摘要目录
     if dg.exists():  # 存在
         return [json.loads(p.read_text()) for p in sorted(dg.glob("*.json"))]  # 按文件名排序读入全部摘要（排序保证顺序稳定可复现）
